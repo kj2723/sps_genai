@@ -3,8 +3,11 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from app.bigram_model import BigramModel
 from app.embedding_model import calculate_embedding, calculate_similarity
+from fastapi import File, UploadFile, HTTPException
+from app.cnn_model import CNNClassifier
 
 app = FastAPI()
+cnn_classifier = CNNClassifier()
 
 # Sample corpus for the bigram model
 corpus = [
@@ -46,3 +49,9 @@ def get_embedding(request: EmbeddingRequest):
 def get_similarity(request: SimilarityRequest):
     similarity = calculate_similarity(request.word1, request.word2)
     return {"word1": request.word1, "word2": request.word2, "similarity": float(similarity)}
+
+@app.post("/classify_image")
+async def classify_image(file: UploadFile = File(...)):
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Upload an image file")
+    return cnn_classifier.predict(await file.read())

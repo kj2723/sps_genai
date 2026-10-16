@@ -5,11 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "datasets>=5.1.0",
     "en-core-web-lg",
     "fastapi[standard]>=0.142.2",
     "jupyter>=1.1.1",
+    "pillow>=12.3.0",
     "pydantic>=2.13.5",
+    "python-multipart>=0.0.32",
     "spacy>=3.8.16",
+    "torch>=2.14.1",
+    "torchvision>=0.29.1",
 ]
 
 [tool.uv.sources]
