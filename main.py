@@ -6,6 +6,12 @@ from app.embedding_model import calculate_embedding, calculate_similarity
 from fastapi import File, UploadFile, HTTPException
 from app.cnn_model import CNNClassifier
 
+import io
+import torch
+from fastapi.responses import Response
+from torchvision.utils import save_image
+from helper_lib.model import get_model
+
 app = FastAPI()
 cnn_classifier = CNNClassifier()
 
@@ -55,3 +61,18 @@ async def classify_image(file: UploadFile = File(...)):
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Upload an image file")
     return cnn_classifier.predict(await file.read())
+
+
+gan = get_model("GAN")
+gan.generator.load_state_dict(torch.load("app/gan_generator.pth", map_location="cpu"))
+gan.generator.eval()
+
+
+@app.get("/generate_digits")
+def generate_digits(n: int = 16):
+    """Generate n handwritten digits with the trained GAN, returned as a PNG grid."""
+    with torch.no_grad():
+        imgs = gan.generator(torch.randn(n, gan.z_dim))
+    buf = io.BytesIO()
+    save_image(imgs, buf, format="png", nrow=4, normalize=True)
+    return Response(content=buf.getvalue(), media_type="image/png")
